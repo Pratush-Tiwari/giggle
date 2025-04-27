@@ -1,0 +1,182 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Icons', 'Helvetica Neue',
+    'Helvetica', 'Arial', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+* {
+  color: text-neutral-50;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply text-neutral-950;
+}
+
+p,
+span,
+li,
+input,
+textarea,
+select {
+  @apply text-neutral-600;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  min-width: 300px;
+  min-height: 400px;
+}
+
+@layer base {
+  :root {
+    --radius: 0.5rem;
+    /* Light mode colors */
+    --primary-50: #f0f9ff;
+    --primary-100: #e0f2fe;
+    --primary-200: #bae6fd;
+    --primary-300: #7dd3fc;
+    --primary-400: #38bdf8;
+    --primary-500: #0ea5e9;
+    --primary-600: #0284c7;
+    --primary-700: #0369a1;
+    --primary-800: #075985;
+    --primary-900: #0c4a6e;
+    --primary-950: #082f49;
+
+    --neutral-50: #f8fafc;
+    --neutral-100: #f1f5f9;
+    --neutral-200: #e2e8f0;
+    --neutral-300: #cbd5e1;
+    --neutral-400: #94a3b8;
+    --neutral-500: #64748b;
+    --neutral-600: #475569;
+    --neutral-700: #334155;
+    --neutral-800: #1e293b;
+    --neutral-900: #0f172a;
+    --neutral-950: #000000;
+
+    --success-50: #f0fdf4;
+    --success-100: #dcfce7;
+    --success-200: #bbf7d0;
+    --success-300: #86efac;
+    --success-400: #4ade80;
+    --success-500: #22c55e;
+    --success-600: #16a34a;
+    --success-700: #15803d;
+    --success-800: #166534;
+    --success-900: #14532d;
+    --success-950: #052e16;
+
+    --warning-50: #fffbeb;
+    --warning-100: #fef3c7;
+    --warning-200: #fde68a;
+    --warning-300: #fcd34d;
+    --warning-400: #fbbf24;
+    --warning-500: #f59e0b;
+    --warning-600: #d97706;
+    --warning-700: #b45309;
+    --warning-800: #92400e;
+    --warning-900: #78350f;
+    --warning-950: #451a03;
+
+    --error-50: #fef2f2;
+    --error-100: #fee2e2;
+    --error-200: #fecaca;
+    --error-300: #fca5a5;
+    --error-400: #f87171;
+    --error-500: #ef4444;
+    --error-600: #dc2626;
+    --error-700: #b91c1c;
+    --error-800: #991b1b;
+    --error-900: #7f1d1d;
+    --error-950: #450a0a;
+  }
+
+  .dark {
+    --radius: 0.5rem;
+    /* Dark mode colors */
+    --primary-50: #082f49;
+    --primary-100: #0c4a6e;
+    --primary-200: #075985;
+    --primary-300: #0369a1;
+    --primary-400: #0284c7;
+    --primary-500: #0ea5e9;
+    --primary-600: #38bdf8;
+    --primary-700: #7dd3fc;
+    --primary-800: #bae6fd;
+    --primary-900: #e0f2fe;
+    --primary-950: #f0f9ff;
+
+    --neutral-50: #0f172a;
+    --neutral-100: #1e293b;
+    --neutral-200: #334155;
+    --neutral-300: #475569;
+    --neutral-400: #64748b;
+    --neutral-500: #94a3b8;
+    --neutral-600: #cbd5e1;
+    --neutral-700: #e2e8f0;
+    --neutral-800: #f1f5f9;
+    --neutral-900: #f8fafc;
+    --neutral-950: #ffffff;
+
+    --success-50: #052e16;
+    --success-100: #14532d;
+    --success-200: #166534;
+    --success-300: #15803d;
+    --success-400: #16a34a;
+    --success-500: #22c55e;
+    --success-600: #4ade80;
+    --success-700: #86efac;
+    --success-800: #bbf7d0;
+    --success-900: #dcfce7;
+    --success-950: #f0fdf4;
+
+    --warning-50: #451a03;
+    --warning-100: #78350f;
+    --warning-200: #92400e;
+    --warning-300: #b45309;
+    --warning-400: #d97706;
+    --warning-500: #f59e0b;
+    --warning-600: #fbbf24;
+    --warning-700: #fcd34d;
+    --warning-800: #fde68a;
+    --warning-900: #fef3c7;
+    --warning-950: #fffbeb;
+
+    --error-50: #450a0a;
+    --error-100: #7f1d1d;
+    --error-200: #991b1b;
+    --error-300: #b91c1c;
+    --error-400: #dc2626;
+    --error-500: #ef4444;
+    --error-600: #f87171;
+    --error-700: #fca5a5;
+    --error-800: #fecaca;
+    --error-900: #fee2e2;
+    --error-950: #fef2f2;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

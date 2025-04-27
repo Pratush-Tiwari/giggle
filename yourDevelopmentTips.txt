@@ -1,0 +1,25 @@
+# Development Workflow
+
+- Use `npm run dev` to start the development server.
+- Use `npm run build` to generate a production build.
+- Use `npm run test` to run all tests.
+- Use `npm run lint` to run ESLint on your codebase.
+- Use `npm run format` to format code with Prettier.
+
+# Project Structure
+
+```text
+src/
+├── background/    # Background scripts
+├── content/       # Content scripts
+├── popup/         # Popup UI
+├── components/    # Shared components
+├── hooks/         # Custom React hooks
+├── utils/         # Utility functions
+├── types/         # TypeScript type definitions
+└── __tests__/     # Test files
+```
+
+loxele2194@mongrec.com
+Karan Arjun
+KaranArjun
