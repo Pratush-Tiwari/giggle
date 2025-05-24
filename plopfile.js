@@ -4,8 +4,7 @@ export default function (plop) {
   plop.setPrompt('directory', inquirerDirectory);
 
   plop.setGenerator('component', {
-    description:
-      'Generate a React component folder with a loadable index file and a component file',
+    description: 'Generate a React component folder with a loadable file and a component file',
     prompts: [
       {
         type: 'input',
@@ -33,12 +32,6 @@ export default function (plop) {
       },
       {
         type: 'confirm',
-        name: 'useAsync',
-        message: 'Do you want to load the component asynchronously?',
-        default: true,
-      },
-      {
-        type: 'confirm',
         name: 'useTests',
         message: 'Do you want to have tests?',
         default: false,
@@ -51,7 +44,7 @@ export default function (plop) {
       // Add component file
       actions.push({
         type: 'add',
-        path: `${targetPath}/{{pascalCase name}}/{{pascalCase name}}.tsx`,
+        path: `${targetPath}/{{pascalCase name}}/index.tsx`,
         template: `/**
  *
  * {{pascalCase name}}
@@ -71,16 +64,23 @@ const Div = styled.div\`\`;
 {{/if}}`,
       });
 
-      // Add index file if async loading is enabled
-      if (data.useAsync) {
-        actions.push({
-          type: 'add',
-          path: `${targetPath}/{{pascalCase name}}/index.tsx`,
-          template: `import loadable from '@loadable/component';
+      // Add loadable file
+      actions.push({
+        type: 'add',
+        path: `${targetPath}/{{pascalCase name}}/loadable.ts`,
+        template: `/**
+ *
+ * Asynchronously loads the component for {{pascalCase name}}
+ *
+ */
 
-export default loadable(() => import('./{{pascalCase name}}'));`,
-        });
-      }
+import { lazyLoad } from '@/utils/loadable';
+
+export const {{pascalCase name}} = lazyLoad(
+  () => import('./index'),
+  module => module.{{pascalCase name}},
+);`,
+      });
 
       // Add test file if tests are enabled
       if (data.useTests) {
