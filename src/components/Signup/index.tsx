@@ -29,12 +29,33 @@ import { Separator } from '@/components/ui/separator';
 const signupSchema = z
   .object({
     email: z.string().min(1, 'Email is required').email('Please enter a valid email address'),
-    password: z.string().min(1, 'Password is required'), // Consider adding .min(8, 'Password must be at least 8 characters') for security
+    password: z
+      .string()
+      .min(
+        8,
+        'Password must be at least 8 characters including one uppercase letter, one lowercase letter, one number and one special character',
+      )
+      .regex(
+        /[A-Z]/,
+        'Password must be at least 8 characters including one uppercase letter, one lowercase letter, one number and one special character',
+      )
+      .regex(
+        /[a-z]/,
+        'Password must be at least 8 characters including one uppercase letter, one lowercase letter, one number and one special character',
+      )
+      .regex(
+        /[0-9]/,
+        'Password must be at least 8 characters including one uppercase letter, one lowercase letter, one number and one special character',
+      )
+      .regex(
+        /[^A-Za-z0-9]/,
+        'Password must be at least 8 characters including one uppercase letter, one lowercase letter, one number and one special character',
+      ),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
   })
   .refine(data => data.password === data.confirmPassword, {
     message: 'Passwords do not match',
-    path: ['confirmPassword'], // Error will be associated with the confirmPassword field
+    path: ['confirmPassword'],
   });
 
 type SignupFormData = z.infer<typeof signupSchema>;

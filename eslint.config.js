@@ -22,6 +22,10 @@ export default [
       },
       globals: {
         ...globals.browser,
+        ...globals.node,
+        ...globals.jest,
+        React: 'readonly',
+        JSX: 'readonly',
       },
     },
     plugins: {
@@ -52,6 +56,20 @@ export default [
           arrowParens: 'avoid',
         },
       ],
+    },
+  },
+  {
+    files: ['**/*.test.{ts,tsx}'],
+    rules: {
+      'no-undef': 'off', // Jest globals are handled by globals.jest
+    },
+  },
+  {
+    files: ['**/*.js'],
+    languageOptions: {
+      globals: {
+        ...globals.node,
+      },
     },
   },
 ];

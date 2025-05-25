@@ -1,10 +1,19 @@
 # Development Workflow
 
-- Use `npm run dev` to start the development server.
+current working commands
+=====================================================================
+- Use `yarn dev` to start the development server.
+- Use `yarn generate:component` to generate custom folder components.
+- Use `yarn format` to format code with Prettier.
+=====================================================================
+
+To be implemented
+=====================================================================
 - Use `npm run build` to generate a production build.
 - Use `npm run test` to run all tests.
 - Use `npm run lint` to run ESLint on your codebase.
-- Use `npm run format` to format code with Prettier.
+=====================================================================
+
 
 # Project Structure
 
