@@ -1,7 +1,7 @@
 import { useTheme } from './theme-context';
-import { colors } from './theme';
+import { colors, type ColorPalette } from './theme';
 
-export function useThemeColors() {
+export function useThemeColors(): ColorPalette[keyof ColorPalette] {
   const { theme } = useTheme();
   return colors[theme];
 }
