@@ -19,6 +19,7 @@ export const CreateNote = memo(({ folderId, onSuccess }: Props) => {
   const [content, setContent] = useState<string>('');
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState<string>('');
+  const [url, setUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const { createNote } = useNotes(folderId);
   const { currentUser } = useAuth();
@@ -54,6 +55,7 @@ export const CreateNote = memo(({ folderId, onSuccess }: Props) => {
         title: title.trim(),
         content: content.trim(),
         tags,
+        url: url.trim(),
         isArchived: false,
         isPinned: false,
       });
@@ -61,6 +63,7 @@ export const CreateNote = memo(({ folderId, onSuccess }: Props) => {
       setContent('');
       setTags([]);
       setTagInput('');
+      setUrl('');
       onSuccess?.();
     } catch (error) {
       console.error('Failed to create note:', error);
@@ -104,6 +107,19 @@ export const CreateNote = memo(({ folderId, onSuccess }: Props) => {
               onChange={e => setContent(e.target.value)}
               placeholder="Write your note here..."
               className="w-full min-h-[120px] resize-none !my-input"
+              disabled={isLoading}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="noteUrl">URL (Optional)</Label>
+            <Input
+              id="noteUrl"
+              type="url"
+              value={url}
+              onChange={e => setUrl(e.target.value)}
+              placeholder="Enter URL (optional)"
+              className="w-full !my-input"
               disabled={isLoading}
             />
           </div>

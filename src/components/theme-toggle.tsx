@@ -2,7 +2,7 @@ import { Moon, Sun } from 'lucide-react';
 import { useTheme } from '@/lib/theme-context';
 import { Switch } from '@/components/ui/switch';
 
-export function ThemeToggle() {
+export function ThemeToggle(): JSX.Element {
   const { theme, toggleTheme } = useTheme();
   return (
     <div className="flex items-center space-x-2">

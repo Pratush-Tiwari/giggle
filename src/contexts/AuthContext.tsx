@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
   User,
   createUserWithEmailAndPassword,
@@ -10,11 +10,15 @@ import {
 } from 'firebase/auth';
 import { auth } from '../config/firebase';
 import { toast } from '../hooks/use-toast';
+import { folderService } from '../services/folderService';
+import { FirebaseError } from 'firebase/app';
 
 interface AuthContextType {
   currentUser: User | null;
   loading: boolean;
+  // eslint-disable-next-line no-unused-vars
   signup: (email: string, password: string) => Promise<void>;
+  // eslint-disable-next-line no-unused-vars
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -22,7 +26,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | null>(null);
 
-export const useAuth = () => {
+export const useAuth = (): AuthContextType => {
   const context = useContext(AuthContext);
   if (!context) {
     throw new Error('useAuth must be used within an AuthProvider');
@@ -30,9 +34,8 @@ export const useAuth = () => {
   return context;
 };
 
-// Helper function to get user-friendly error messages
-const getErrorMessage = (error: any): string => {
-  if (error?.code) {
+const getErrorMessage = (error: Error | FirebaseError): string => {
+  if ('code' in error) {
     switch (error.code) {
       case 'auth/user-not-found':
         return 'No account found with this email address.';
@@ -55,9 +58,9 @@ const getErrorMessage = (error: any): string => {
   return error?.message || 'An unexpected error occurred.';
 };
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }): JSX.Element => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(
@@ -80,9 +83,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     return unsubscribe;
   }, []);
 
-  const signup = async (email: string, password: string) => {
+  const signup = useCallback(async (email: string, password: string): Promise<void> => {
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await folderService.createDefaultFolders(userCredential.user.uid);
       toast({
         title: 'Account Created',
         description: 'Your account has been created successfully!',
@@ -91,14 +95,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Signup error:', error);
       toast({
         title: 'Signup Failed',
-        description: getErrorMessage(error),
+        description: getErrorMessage(error as Error),
         variant: 'destructive',
       });
       throw error;
     }
-  };
+  }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast({
@@ -109,14 +113,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Login error:', error);
       toast({
         title: 'Login Failed',
-        description: getErrorMessage(error),
-        variant: 'default',
+        description: getErrorMessage(error as Error),
+        variant: 'destructive',
       });
       throw error;
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await signOut(auth);
       toast({
@@ -127,40 +131,53 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       console.error('Logout error:', error);
       toast({
         title: 'Logout Failed',
-        description: getErrorMessage(error),
+        description: getErrorMessage(error as Error),
         variant: 'destructive',
       });
       throw error;
     }
-  };
+  }, []);
 
-  const signInWithGoogle = async () => {
+  const signInWithGoogle = useCallback(async (): Promise<void> => {
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      toast({
-        title: 'Welcome',
-        description: 'You have been signed in successfully with Google!',
-      });
+      const result = await signInWithPopup(auth, provider);
+      // @ts-ignore - additionalUserInfo exists on the result but TypeScript types are incorrect
+      const isNewUser = result.additionalUserInfo?.isNewUser ?? false;
+      if (isNewUser) {
+        await folderService.createDefaultFolders(result.user.uid);
+        toast({
+          title: 'Welcome',
+          description: 'Your account has been created and you have been signed in with Google!',
+        });
+      } else {
+        toast({
+          title: 'Welcome Back',
+          description: 'You have been signed in successfully with Google!',
+        });
+      }
     } catch (error) {
       console.error('Google sign-in error:', error);
       toast({
         title: 'Google Sign-in Failed',
-        description: getErrorMessage(error),
+        description: getErrorMessage(error as Error),
         variant: 'destructive',
       });
       throw error;
     }
-  };
+  }, []);
 
-  const value = {
-    currentUser,
-    loading,
-    signup,
-    login,
-    logout,
-    signInWithGoogle,
-  };
+  const value = useMemo(
+    () => ({
+      currentUser,
+      loading,
+      signup,
+      login,
+      logout,
+      signInWithGoogle,
+    }),
+    [currentUser, loading, signup, login, logout, signInWithGoogle],
+  );
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>;
 };

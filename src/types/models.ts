@@ -30,6 +30,7 @@ export interface Note {
   isArchived: boolean;
   isPinned: boolean;
   lastAccessedAt: Timestamp;
+  url?: string;
 }
 
 // Collection names as constants

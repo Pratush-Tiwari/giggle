@@ -17,6 +17,7 @@ import {
   History,
   Edit3Icon as Edit3,
   Save,
+  ExternalLink,
 } from 'lucide-react';
 
 export interface Timestamp {
@@ -37,6 +38,7 @@ export interface Note {
   isArchived: boolean;
   isPinned: boolean;
   lastAccessedAt: Timestamp;
+  url?: string;
 }
 
 const formatDate = (timestamp: Timestamp): string => {
@@ -208,6 +210,22 @@ export const NoteView = memo(() => {
             </div>
             <span>{formatDate(note.lastAccessedAt)}</span>
           </div>
+          {note.url && (
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <ExternalLink className="h-4 w-4 mr-2" />
+                <span>Source URL: </span>
+              </div>
+              <a
+                href={note.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 hover:underline"
+              >
+                {note.url}
+              </a>
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
