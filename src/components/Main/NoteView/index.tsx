@@ -18,7 +18,10 @@ import {
   Edit3Icon as Edit3,
   Save,
   ExternalLink,
+  Sparkles,
+  Loader2,
 } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 export interface Timestamp {
   seconds: number;
@@ -69,6 +72,8 @@ export const NoteView = memo(() => {
   const note = notes.find(n => n.noteId === noteId);
   const [editedContent, setEditedContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [summary, setSummary] = useState<string>('');
+  const [isSummarizing, setIsSummarizing] = useState(false);
 
   useEffect(() => {
     if (noteId) {
@@ -92,6 +97,41 @@ export const NoteView = memo(() => {
     }
   };
 
+  const handleSummarize = async () => {
+    if (!note?.content) return;
+
+    setIsSummarizing(true);
+    try {
+      const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer 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`,
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'Giggle Notes',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'deepseek/deepseek-r1-0528:free',
+          messages: [
+            {
+              role: 'user',
+              content: `Please provide a nice detailed summary and include all the important points of the following text:\n\n${note.content}`,
+            },
+          ],
+        }),
+      });
+
+      const data = await response.json();
+      if (data.choices && data.choices[0]?.message?.content) {
+        setSummary(data.choices[0].message.content);
+      }
+    } catch (error) {
+      console.error('Failed to summarize note:', error);
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
   if (!note) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -110,10 +150,25 @@ export const NoteView = memo(() => {
           </CardTitle>
           <div className="flex items-center gap-3">
             {!isEditing ? (
-              <Button variant="outline" onClick={() => setIsEditing(true)} className="gap-2">
-                <Edit3 className="h-4 w-4" />
-                Edit Note
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setIsEditing(true)} className="gap-2">
+                  <Edit3 className="h-4 w-4" />
+                  Edit Note
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleSummarize}
+                  className="gap-2"
+                  disabled={isSummarizing}
+                >
+                  {isSummarizing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
+                  Summarize
+                </Button>
+              </div>
             ) : (
               <div className="flex gap-2">
                 <Button
@@ -158,76 +213,91 @@ export const NoteView = memo(() => {
           </div>
         </div>
       </CardHeader>
-      <CardContent className="p-2 space-y-4 overflow-y-auto flex-1 flex flex-col">
-        <Textarea
-          disabled={!isEditing}
-          value={editedContent}
-          onChange={e => setEditedContent(e.target.value)}
-          className="min-h-[200px] w-full !my-input"
-          placeholder="Write your note here..."
-        />
+      <ScrollArea>
+        <CardContent className="p-2 space-y-4 overflow-y-auto flex-1 flex flex-col">
+          <Textarea
+            disabled={!isEditing}
+            value={editedContent}
+            onChange={e => setEditedContent(e.target.value)}
+            className="min-h-[200px] w-full !my-input"
+            placeholder="Write your note here..."
+          />
 
-        {note.tags && note.tags.length > 0 && (
-          <>
-            <Separator className="my-0" />
-            <div className="p-2 w-full">
-              <div className="flex items-center gap-2 mb-2">
-                <Tag className="h-4 w-4 text-muted-foreground" />
-                <h3 className="text-sm font-medium text-muted-foreground">Tags</h3>
+          {note.tags && note.tags.length > 0 && (
+            <>
+              <Separator className="my-0" />
+              <div className="p-2 w-full">
+                <div className="flex items-center gap-2 mb-2">
+                  <Tag className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-medium text-muted-foreground">Tags</h3>
+                </div>
+                <div className="flex flex-wrap gap-2 m-0">
+                  {note.tags.map(tag => (
+                    <Badge key={tag} variant="secondary" className="text-xs">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
               </div>
-              <div className="flex flex-wrap gap-2 m-0">
-                {note.tags.map(tag => (
-                  <Badge key={tag} variant="secondary" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </>
-        )}
+            </>
+          )}
 
-        <Separator className="my-0" />
-        <div className="p-2 w-full">
-          <h3 className="text-sm font-medium text-muted-foreground mb-2">Details</h3>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <CalendarDays className="h-4 w-4 mr-2" />
-              <span>Created At: </span>
-            </div>
-            <span>{formatDate(note.createdAt)}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <Edit3 className="h-4 w-4 mr-2" />
-              <span>Updated At: </span>
-            </div>
-            <span>{formatDate(note.updatedAt)}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center">
-              <History className="h-4 w-4 mr-2" />
-              <span>Last Accessed At: </span>
-            </div>
-            <span>{formatDate(note.lastAccessedAt)}</span>
-          </div>
-          {note.url && (
+          {summary && (
+            <>
+              <Separator className="my-0" />
+              <div className="p-2 w-full">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-muted-foreground" />
+                  <h3 className="text-sm font-medium text-muted-foreground">Summary</h3>
+                </div>
+                <p className="text-sm text-muted-foreground">{summary}</p>
+              </div>
+            </>
+          )}
+
+          <Separator className="my-0" />
+          <div className="p-2 w-full">
+            <h3 className="text-sm font-medium text-muted-foreground mb-2">Details</h3>
             <div className="flex items-center justify-between">
               <div className="flex items-center">
-                <ExternalLink className="h-4 w-4 mr-2" />
-                <span>Source URL: </span>
+                <CalendarDays className="h-4 w-4 mr-2" />
+                <span>Created At: </span>
               </div>
-              <a
-                href={note.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-blue-600 hover:underline"
-              >
-                {note.url}
-              </a>
+              <span>{formatDate(note.createdAt)}</span>
             </div>
-          )}
-        </div>
-      </CardContent>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Edit3 className="h-4 w-4 mr-2" />
+                <span>Updated At: </span>
+              </div>
+              <span>{formatDate(note.updatedAt)}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <History className="h-4 w-4 mr-2" />
+                <span>Last Accessed At: </span>
+              </div>
+              <span>{formatDate(note.lastAccessedAt)}</span>
+            </div>
+            {note.url && (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <ExternalLink className="h-4 w-4 mr-2" />
+                  <span>Source URL: </span>
+                </div>
+                <a
+                  href={note.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  {note.url}
+                </a>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </ScrollArea>
     </Card>
   );
 });
