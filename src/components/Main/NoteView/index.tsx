@@ -105,7 +105,7 @@ export const NoteView = memo(() => {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer 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`,
+          Authorization: `Bearer apikey`,
           'HTTP-Referer': window.location.origin,
           'X-Title': 'Giggle Notes',
           'Content-Type': 'application/json',
@@ -219,7 +219,7 @@ export const NoteView = memo(() => {
             disabled={!isEditing}
             value={editedContent}
             onChange={e => setEditedContent(e.target.value)}
-            className="min-h-[200px] w-full !my-input"
+            className="min-h-[200px] w-full !my-input custom-scrollbar"
             placeholder="Write your note here..."
           />
 
