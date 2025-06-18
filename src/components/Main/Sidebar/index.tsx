@@ -184,10 +184,11 @@ export const Sidebar = memo(() => {
                             Are you sure you want to delete this folder? This action cannot be
                             undone.
                             {folderNotes.length > 0 && (
-                              <p className="mt-2 text-destructive">
+                              <span className="mt-2 text-destructive">
+                                {' '}
                                 Warning: This folder contains {folderNotes.length} note
                                 {folderNotes.length === 1 ? '' : 's'} that will also be deleted.
-                              </p>
+                              </span>
                             )}
                           </AlertDialogDescription>
                         </AlertDialogHeader>

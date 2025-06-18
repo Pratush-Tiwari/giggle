@@ -9,7 +9,7 @@ import { useForm } from 'react-hook-form';
 import { useNavigate, Link } from 'react-router-dom';
 import * as z from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Loader2, Mail, Lock, UserPlus } from 'lucide-react';
+import { Loader2, Mail, Lock, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -64,6 +64,8 @@ export const Signup = memo(() => {
   const [error, setError] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
   const [googleLoading, setGoogleLoading] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const { signup, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
@@ -207,12 +209,24 @@ export const Signup = memo(() => {
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
-                          type="password"
+                          type={showPassword ? 'text' : 'password'}
                           placeholder="Enter your password"
-                          className="pl-10 !my-input"
+                          className="pl-10 pr-10 !my-input"
                           {...field}
                           aria-invalid={form.formState.errors.password ? 'true' : 'false'}
                         />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="absolute right-0 top-1/2 -translate-y-1/2 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-gray-400" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-gray-400" />
+                          )}
+                        </Button>
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -230,12 +244,24 @@ export const Signup = memo(() => {
                       <div className="relative">
                         <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                         <Input
-                          type="password"
+                          type={showConfirmPassword ? 'text' : 'password'}
                           placeholder="Confirm your password"
-                          className="pl-10 !my-input"
+                          className="pl-10 pr-10 !my-input"
                           {...field}
                           aria-invalid={form.formState.errors.confirmPassword ? 'true' : 'false'}
                         />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="absolute right-0 top-1/2 -translate-y-1/2 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="h-4 w-4 text-gray-400" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-gray-400" />
+                          )}
+                        </Button>
                       </div>
                     </FormControl>
                     <FormMessage />

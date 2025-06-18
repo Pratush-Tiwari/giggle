@@ -3,7 +3,7 @@
   "name": "Giggle",
   "version": "1.0.0",
   "description": "Save and organize your notes with ease",
-  "permissions": ["storage", "contextMenus", "notifications", "tabs"],
+  "permissions": ["storage", "contextMenus", "notifications", "tabs", "scripting"],
   "action": {
     "default_icon": {
       "16": "icon-16.png",
@@ -19,5 +19,10 @@
   "background": {
     "service_worker": "background.js",
     "type": "module"
-  }
+  },
+  "host_permissions": ["<all_urls>"],
+  "web_accessible_resources": [{
+    "resources": ["icon-48.png"],
+    "matches": ["<all_urls>"]
+  }]
 }

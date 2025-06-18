@@ -1,5 +1,5 @@
 import { memo, useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import { noteService } from '@/services/noteService';
 import { useNotes } from '@/hooks/useNotes';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,17 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Textarea } from '@/components/ui/textarea';
 import {
   FileText,
@@ -20,8 +31,10 @@ import {
   ExternalLink,
   Sparkles,
   Loader2,
+  Trash2,
 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { toast } from '@/hooks/use-toast';
 
 export interface Timestamp {
   seconds: number;
@@ -68,7 +81,8 @@ const formatDate = (timestamp: Timestamp): string => {
 
 export const NoteView = memo(() => {
   const { noteId } = useParams<{ noteId: string }>();
-  const { notes, updateNote } = useNotes();
+  const { notes, updateNote, deleteNote } = useNotes();
+  const navigate = useNavigate();
   const note = notes.find(n => n.noteId === noteId);
   const [editedContent, setEditedContent] = useState('');
   const [isEditing, setIsEditing] = useState(false);
@@ -93,7 +107,27 @@ export const NoteView = memo(() => {
       await updateNote(noteId, { content: editedContent });
       setIsEditing(false);
     } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'An Error Occured',
+        variant: 'destructive',
+      });
       console.error('Failed to update note:', error);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!noteId) return;
+    try {
+      await deleteNote(noteId);
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'An Error Occured',
+        variant: 'destructive',
+      });
+      console.error('Failed to delete note:', error);
     }
   };
 
@@ -105,7 +139,7 @@ export const NoteView = memo(() => {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer apikey`,
+          Authorization: `Bearer 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`,
           'HTTP-Referer': window.location.origin,
           'X-Title': 'Giggle Notes',
           'Content-Type': 'application/json',
@@ -126,6 +160,11 @@ export const NoteView = memo(() => {
         setSummary(data.choices[0].message.content);
       }
     } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'An Error Occured',
+        variant: 'destructive',
+      });
       console.error('Failed to summarize note:', error);
     } finally {
       setIsSummarizing(false);
@@ -168,6 +207,26 @@ export const NoteView = memo(() => {
                   )}
                   Summarize
                 </Button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button variant="destructive" className="gap-2">
+                      <Trash2 className="h-4 w-4" />
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your note.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={handleDelete}>Delete</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
             ) : (
               <div className="flex gap-2">
