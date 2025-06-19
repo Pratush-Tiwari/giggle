@@ -108,11 +108,12 @@ export const NoteView = memo(() => {
       setIsEditing(false);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'An Error Occured',
+        title: 'Error Saving Note',
+        description: 'Failed to save note. Please try again.',
         variant: 'destructive',
       });
       console.error('Failed to update note:', error);
+      setIsEditing(false); // Exit editing mode on error
     }
   };
 
@@ -135,6 +136,12 @@ export const NoteView = memo(() => {
     if (!note?.content) return;
 
     setIsSummarizing(true);
+    setSummary(''); // Clear previous summary
+
+    const controller = new AbortController();
+    const timeoutDuration = 30000; // 30 seconds
+    const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
+
     try {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
@@ -153,19 +160,53 @@ export const NoteView = memo(() => {
             },
           ],
         }),
+        signal: controller.signal,
       });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        // Handle HTTP errors like 500, 404, etc.
+        toast({
+          title: 'Error Summarizing',
+          description: `API request failed with status ${response.status}`,
+          variant: 'destructive',
+        });
+        console.error('Failed to summarize note, status:', response.status);
+        setIsSummarizing(false);
+        return;
+      }
 
       const data = await response.json();
       if (data.choices && data.choices[0]?.message?.content) {
-        setSummary(data.choices[0].message.content);
+        const summaryContent = data.choices[0].message.content;
+        setSummary(summaryContent);
+        setEditedContent(summaryContent); // Update editedContent with the summary
+      } else {
+        toast({
+          title: 'Error Summarizing',
+          description: 'Unexpected response format from summarization API.',
+          variant: 'destructive',
+        });
+        console.error('Failed to summarize note, unexpected data:', data);
       }
     } catch (error) {
-      toast({
-        title: 'Error',
-        description: 'An Error Occured',
-        variant: 'destructive',
-      });
-      console.error('Failed to summarize note:', error);
+      clearTimeout(timeoutId);
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        toast({
+          title: 'Summarization Timeout',
+          description: 'The summarization request took too long to complete.',
+          variant: 'destructive',
+        });
+        console.error('Summarization aborted due to timeout:', error);
+      } else {
+        toast({
+          title: 'Error Summarizing',
+          description: 'Failed to summarize. Please try again.',
+          variant: 'destructive',
+        });
+        console.error('Failed to summarize note:', error);
+      }
     } finally {
       setIsSummarizing(false);
     }
