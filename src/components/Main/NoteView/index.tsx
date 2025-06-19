@@ -139,7 +139,7 @@ export const NoteView = memo(() => {
       const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
         method: 'POST',
         headers: {
-          Authorization: `Bearer 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`,
+          Authorization: `Bearer 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`,
           'HTTP-Referer': window.location.origin,
           'X-Title': 'Giggle Notes',
           'Content-Type': 'application/json',
