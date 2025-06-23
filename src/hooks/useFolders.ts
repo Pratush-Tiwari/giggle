@@ -31,6 +31,10 @@ interface FoldersState {
   // eslint-disable-next-line no-unused-vars
   deleteFolder: (folderId: string) => Promise<void>;
   refreshFolders: () => Promise<void>;
+  archiveFolder: (folderId: string) => Promise<void>;
+  unarchiveFolder: (folderId: string) => Promise<void>;
+  archivedFolders: SerializedFolder[];
+  activeFolders: SerializedFolder[];
 }
 
 export const useFolders = (): FoldersState => {
@@ -101,6 +105,37 @@ export const useFolders = (): FoldersState => {
     }
   };
 
+  const archiveFolder = async (folderId: string) => {
+    try {
+      await folderService.archiveFolder(folderId);
+      const existingFolder = folders.find(folder => folder.folderId === folderId);
+      if (!existingFolder) throw new Error('Folder not found');
+      const updatedFolder = { ...existingFolder, isArchived: true } as Folder;
+      const serializedFolder = convertFolderTimestamps(updatedFolder);
+      dispatch(updateFolderAction(serializedFolder));
+    } catch (err) {
+      dispatch(setError(err instanceof Error ? err.message : 'Failed to archive folder'));
+      throw err;
+    }
+  };
+
+  const unarchiveFolder = async (folderId: string) => {
+    try {
+      await folderService.unarchiveFolder(folderId);
+      const existingFolder = folders.find(folder => folder.folderId === folderId);
+      if (!existingFolder) throw new Error('Folder not found');
+      const updatedFolder = { ...existingFolder, isArchived: false } as Folder;
+      const serializedFolder = convertFolderTimestamps(updatedFolder);
+      dispatch(updateFolderAction(serializedFolder));
+    } catch (err) {
+      dispatch(setError(err instanceof Error ? err.message : 'Failed to unarchive folder'));
+      throw err;
+    }
+  };
+
+  const archivedFolders = folders.filter(folder => folder.isArchived);
+  const activeFolders = folders.filter(folder => !folder.isArchived);
+
   return {
     folders,
     loading,
@@ -109,5 +144,9 @@ export const useFolders = (): FoldersState => {
     updateFolder,
     deleteFolder,
     refreshFolders: fetchFolders,
+    archiveFolder,
+    unarchiveFolder,
+    archivedFolders,
+    activeFolders,
   };
 };

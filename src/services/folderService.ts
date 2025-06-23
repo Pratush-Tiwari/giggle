@@ -137,4 +137,14 @@ export const folderService = {
 
     await batch.commit(); // Commit all operations in the batch
   },
+
+  // Archive a folder
+  async archiveFolder(folderId: string): Promise<void> {
+    await this.updateFolder(folderId, { isArchived: true });
+  },
+
+  // Unarchive a folder
+  async unarchiveFolder(folderId: string): Promise<void> {
+    await this.updateFolder(folderId, { isArchived: false });
+  },
 };

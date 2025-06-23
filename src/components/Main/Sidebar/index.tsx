@@ -6,7 +6,7 @@
 import React from 'react';
 import { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Folder, FolderOpen, FileText, Plus, Trash2 } from 'lucide-react';
+import { LogOut, Folder, FolderOpen, FileText, Plus, Trash2, Archive, Undo2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -38,13 +38,21 @@ import {
 export const Sidebar = memo(() => {
   const navigate = useNavigate();
   const { logout } = useAuth();
-  const { folders, loading: foldersLoading, deleteFolder } = useFolders();
+  const {
+    loading: foldersLoading,
+    deleteFolder,
+    archiveFolder,
+    unarchiveFolder,
+    archivedFolders,
+    activeFolders,
+  } = useFolders();
   const [expandedFolders, setExpandedFolders] = useState<string[]>([]);
   const { notes, loading: notesLoading, deleteNote } = useNotes();
   const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
   const [openNoteDialogFolderId, setOpenNoteDialogFolderId] = useState<string | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
+  const [tab, setTab] = useState<'folders' | 'archive'>('folders');
 
   useEffect(() => {
     if (!foldersLoading && !notesLoading) {
@@ -99,22 +107,37 @@ export const Sidebar = memo(() => {
             <CreateFolder onSuccess={() => setIsCreateFolderOpen(false)} />
           </DialogContent>
         </Dialog>
+        <div className="flex gap-2 my-2">
+          <Button
+            variant={tab === 'folders' ? 'default' : 'ghost'}
+            onClick={() => setTab('folders')}
+            className="flex-1"
+          >
+            Folders
+          </Button>
+          <Button
+            variant={tab === 'archive' ? 'default' : 'ghost'}
+            onClick={() => setTab('archive')}
+            className="flex-1"
+          >
+            Archive
+          </Button>
+        </div>
         <Separator className="my-2" />
 
         {/* Folders */}
         {isInitialLoad && foldersLoading ? (
           <div className="px-4 py-2 text-sm text-muted-foreground">Loading folders...</div>
-        ) : (
-          [...folders]
+        ) : tab === 'folders' ? (
+          [...activeFolders]
             .sort((a, b) => {
               const dateA = a.createdAt.seconds * 1000 + a.createdAt.nanoseconds / 1000000;
               const dateB = b.createdAt.seconds * 1000 + b.createdAt.nanoseconds / 1000000;
-              return dateB - dateA; // Sort in descending order (latest first)
+              return dateB - dateA;
             })
             .map(folder => {
               const isExpanded = expandedFolders.includes(folder.folderId);
               const folderNotes = notes.filter(note => note.folderId === folder.folderId);
-
               return (
                 <React.Fragment key={folder.folderId}>
                   <div className="flex items-center w-[100%] overflow-hidden">
@@ -134,9 +157,18 @@ export const Sidebar = memo(() => {
                           style={{ color: folder.color || 'currentColor' }}
                         />
                       )}
-                      <span className="w-[180px] text-left truncate overflow-hidden">
+                      <span className="w-[140px] text-left truncate overflow-hidden">
                         {folder.name}
                       </span>
+                    </Button>
+                    {/* Archive Button */}
+                    <Button
+                      variant="ghost"
+                      className="h-8 w-8 hover:bg-[var(--button-hover)]"
+                      title="Archive Folder"
+                      onClick={() => archiveFolder(folder.folderId)}
+                    >
+                      <Archive className="h-4 w-4 text-muted-foreground" />
                     </Button>
                     <Dialog
                       open={openNoteDialogFolderId === folder.folderId}
@@ -234,6 +266,33 @@ export const Sidebar = memo(() => {
                 </React.Fragment>
               );
             })
+        ) : (
+          [...archivedFolders]
+            .sort((a, b) => {
+              const dateA = a.createdAt.seconds * 1000 + a.createdAt.nanoseconds / 1000000;
+              const dateB = b.createdAt.seconds * 1000 + b.createdAt.nanoseconds / 1000000;
+              return dateB - dateA;
+            })
+            .map(folder => (
+              <div key={folder.folderId} className="flex items-center w-[100%] overflow-hidden">
+                <Folder
+                  className="h-4 w-4 flex-shrink-0 text-muted-foreground"
+                  style={{ color: folder.color || 'currentColor' }}
+                />
+                <span className="w-[180px] text-left truncate overflow-hidden ml-2">
+                  {folder.name}
+                </span>
+                {/* Unarchive Button */}
+                <Button
+                  variant="ghost"
+                  className="h-8 w-8 hover:bg-[var(--button-hover)]"
+                  title="Unarchive Folder"
+                  onClick={() => unarchiveFolder(folder.folderId)}
+                >
+                  <Undo2 className="h-4 w-4 text-muted-foreground" />
+                </Button>
+              </div>
+            ))
         )}
       </ScrollArea>
 
