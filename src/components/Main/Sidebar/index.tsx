@@ -34,6 +34,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
 
 export const Sidebar = memo(() => {
   const navigate = useNavigate();
@@ -53,6 +54,7 @@ export const Sidebar = memo(() => {
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [folderToDelete, setFolderToDelete] = useState<string | null>(null);
   const [tab, setTab] = useState<'folders' | 'archive'>('folders');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (!foldersLoading && !notesLoading) {
@@ -87,13 +89,32 @@ export const Sidebar = memo(() => {
     }
   };
 
+  // Helper to filter notes by search query
+  const filteredNotes = notes.filter(note => {
+    if (!searchQuery.trim()) return false;
+    const q = searchQuery.toLowerCase();
+    return (
+      note.title.toLowerCase().includes(q) ||
+      note.content.toLowerCase().includes(q) ||
+      (note.tags && note.tags.some(tag => tag.toLowerCase().includes(q)))
+    );
+  });
+
   return (
     <div className="flex h-[100vh] w-[300px] flex-col border-r bg-[var(--surface-light)]">
       <div className="flex w-full h-14 items-center justify-between border-b px-4">
         <span className="text-xl text-sidebar-foreground font-semibold">Giggle</span>
         <ThemeToggle />
       </div>
-
+      {/* Search Bar */}
+      <div className="px-4 py-2">
+        <Input
+          placeholder="Search notes..."
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          className="!my-input"
+        />
+      </div>
       {/* Navigation */}
       <ScrollArea className="flex-1 p-2 space-y-1 w-[100%]">
         <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
@@ -125,10 +146,25 @@ export const Sidebar = memo(() => {
         </div>
         <Separator className="my-2" />
 
-        {/* Folders */}
-        {isInitialLoad && foldersLoading ? (
-          <div className="px-4 py-2 text-sm text-muted-foreground">Loading folders...</div>
-        ) : tab === 'folders' ? (
+        {searchQuery.trim() ? (
+          // Show only matching notes, flat list, no folders
+          filteredNotes.length > 0 ? (
+            filteredNotes.map(note => (
+              <Button
+                key={note.noteId}
+                variant="ghost"
+                className="w-full !overflow-hidden justify-start gap-2 hover:bg-[var(--button-hover)] text-sm"
+                onClick={() => navigate(`/note/${note.noteId}`)}
+              >
+                <FileText className="h-3 w-3" />
+                <span className="w-[200px] text-left truncate overflow-hidden">{note.title}</span>
+              </Button>
+            ))
+          ) : (
+            <div className="px-4 py-2 text-sm text-muted-foreground">No matching notes found.</div>
+          )
+        ) : // ... existing code for folders/notes rendering ...
+        tab === 'folders' ? (
           [...activeFolders]
             .sort((a, b) => {
               const dateA = a.createdAt.seconds * 1000 + a.createdAt.nanoseconds / 1000000;
