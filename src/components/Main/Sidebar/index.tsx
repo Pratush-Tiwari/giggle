@@ -35,6 +35,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 
 export const Sidebar = memo(() => {
   const navigate = useNavigate();
@@ -150,15 +151,27 @@ export const Sidebar = memo(() => {
           // Show only matching notes, flat list, no folders
           filteredNotes.length > 0 ? (
             filteredNotes.map(note => (
-              <Button
-                key={note.noteId}
-                variant="ghost"
-                className="w-full !overflow-hidden justify-start gap-2 hover:bg-[var(--button-hover)] text-sm"
-                onClick={() => navigate(`/note/${note.noteId}`)}
-              >
-                <FileText className="h-3 w-3" />
-                <span className="w-[200px] text-left truncate overflow-hidden">{note.title}</span>
-              </Button>
+              <div key={note.noteId} className="w-full">
+                <Button
+                  variant="ghost"
+                  className="w-full !overflow-hidden justify-start gap-2 hover:bg-[var(--button-hover)] text-sm"
+                  onClick={() => navigate(`/note/${note.noteId}`)}
+                >
+                  <FileText className="h-3 w-3" />
+                  <span className="w-[200px] text-left truncate overflow-hidden">{note.title}</span>
+                </Button>
+                {note.tags && note.tags.length > 0 && (
+                  <div className="pl-6 pr-2 pb-1">
+                    <div className="flex flex-wrap gap-1">
+                      {note.tags.map(tag => (
+                        <Badge key={tag} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
             ))
           ) : (
             <div className="px-4 py-2 text-sm text-muted-foreground">No matching notes found.</div>
