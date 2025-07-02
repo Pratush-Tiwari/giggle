@@ -113,7 +113,7 @@ export const Sidebar = memo(() => {
       <ScrollArea className="flex-1 p-2 space-y-1 w-[100%]">
         <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
           <DialogTrigger asChild>
-            <Button className=" justify-start gap-2">
+            <Button className="w-full justify-start gap-2 mb-1">
               <Plus className="h-4 w-4" />
               Add Folder
             </Button>
@@ -122,24 +122,10 @@ export const Sidebar = memo(() => {
             <CreateFolder onSuccess={() => setIsCreateFolderOpen(false)} />
           </DialogContent>
         </Dialog>
-        <div className="flex gap-2 my-2">
-          <Button
-            variant={tab === 'folders' ? 'default' : 'ghost'}
-            onClick={() => setTab('folders')}
-            className="flex-1"
-          >
-            Folders
-          </Button>
-          <Button
-            variant={tab === 'archive' ? 'default' : 'ghost'}
-            onClick={() => setTab('archive')}
-            className="flex-1"
-          >
-            Archive
-          </Button>
-        </div>
+        <Separator className="my-2" />
+
         {/* Search Bar */}
-        <div className="px-4 py-2">
+        <div className="py-2">
           <Input
             placeholder="Search notes..."
             value={searchQuery}
@@ -147,6 +133,23 @@ export const Sidebar = memo(() => {
             className="!my-input"
           />
         </div>
+        <div className="flex gap-2 mb-2">
+          <Button
+            variant={tab === 'folders' ? 'default' : 'outline'}
+            onClick={() => setTab('folders')}
+            className="flex-1"
+          >
+            Folders
+          </Button>
+          <Button
+            variant={tab === 'archive' ? 'default' : 'outline'}
+            onClick={() => setTab('archive')}
+            className="flex-1"
+          >
+            Archived
+          </Button>
+        </div>
+
         <Separator className="my-2" />
 
         {searchQuery.trim() ? (
