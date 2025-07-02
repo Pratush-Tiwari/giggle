@@ -108,14 +108,7 @@ export const Sidebar = memo(() => {
         <ThemeToggle />
       </div>
       {/* Search Bar */}
-      <div className="px-4 py-2">
-        <Input
-          placeholder="Search notes..."
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          className="!my-input"
-        />
-      </div>
+
       {/* Navigation */}
       <ScrollArea className="flex-1 p-2 space-y-1 w-[100%]">
         <Dialog open={isCreateFolderOpen} onOpenChange={setIsCreateFolderOpen}>
@@ -144,6 +137,15 @@ export const Sidebar = memo(() => {
           >
             Archive
           </Button>
+        </div>
+        {/* Search Bar */}
+        <div className="px-4 py-2">
+          <Input
+            placeholder="Search notes..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="!my-input"
+          />
         </div>
         <Separator className="my-2" />
 
