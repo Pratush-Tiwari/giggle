@@ -6,7 +6,17 @@
 import React from 'react';
 import { memo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Folder, FolderOpen, FileText, Plus, Trash2, Archive, Undo2 } from 'lucide-react';
+import {
+  LogOut,
+  Folder,
+  FolderOpen,
+  FileText,
+  Plus,
+  Trash2,
+  Archive,
+  Undo2,
+  X,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
@@ -125,13 +135,23 @@ export const Sidebar = memo(() => {
         <Separator className="my-2" />
 
         {/* Search Bar */}
-        <div className="py-2">
+        <div className="py-2 relative">
           <Input
             placeholder="Search notes..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
-            className="!my-input"
+            className="!my-input pr-8"
           />
+          {searchQuery && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="absolute right-1 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-[var(--button-hover)]"
+              onClick={() => setSearchQuery('')}
+            >
+              <X className="h-3 w-3" />
+            </Button>
+          )}
         </div>
         <div className="flex gap-2 mb-2">
           <Button
