@@ -292,7 +292,11 @@ export const NoteView = memo(() => {
                 </div>
                 <div className="flex flex-wrap gap-2 m-0">
                   {note.tags.map(tag => (
-                    <Badge key={tag} variant="secondary" className="text-xs">
+                    <Badge
+                      key={tag}
+                      variant="outline"
+                      className="text-xs bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 dark:bg-blue-950 dark:border-blue-800 dark:text-blue-300 dark:hover:bg-blue-900"
+                    >
                       {tag}
                     </Badge>
                   ))}
