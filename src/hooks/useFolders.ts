@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { folderService } from '../services/folderService';
 import { Folder } from '../types/models';
-import { useAuth } from './useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   setFolders,
@@ -10,8 +10,7 @@ import {
   deleteFolder as deleteFolderAction,
   setLoading,
   setError,
-} from '@/store/slices/folderSlice';
-import { RootState } from '@/store';
+} from '@/store';
 import { convertFolderTimestamps, SerializableTimestamp } from '@/utils/timestampUtils';
 
 type SerializedFolder = Omit<Folder, 'createdAt'> & {
@@ -22,25 +21,19 @@ interface FoldersState {
   folders: SerializedFolder[];
   loading: boolean;
   error: string | null;
-  // eslint-disable-next-line no-unused-vars
   createFolder: (folderData: Omit<Folder, 'folderId' | 'createdAt'>) => Promise<Folder>;
-
-  // eslint-disable-next-line no-unused-vars
-  updateFolder: (folderId: string, updates: Partial<Folder>) => Promise<void>;
-
-  // eslint-disable-next-line no-unused-vars
+  updateFolder: (folderId: string, folderData: Partial<Folder>) => Promise<void>;
   deleteFolder: (folderId: string) => Promise<void>;
-  refreshFolders: () => Promise<void>;
   archiveFolder: (folderId: string) => Promise<void>;
   unarchiveFolder: (folderId: string) => Promise<void>;
-  archivedFolders: SerializedFolder[];
   activeFolders: SerializedFolder[];
+  archivedFolders: SerializedFolder[];
 }
 
 export const useFolders = (): FoldersState => {
   const dispatch = useAppDispatch();
-  const { folders, loading, error } = useAppSelector((state: RootState) => state.folders);
-  const { user } = useAuth();
+  const { folders, loading, error } = useAppSelector(state => state.app);
+  const { currentUser: user } = useAuth();
 
   const fetchFolders = useCallback(async () => {
     if (!user) return;
@@ -79,16 +72,17 @@ export const useFolders = (): FoldersState => {
     }
   };
 
-  const updateFolder = async (folderId: string, updates: Partial<Folder>) => {
+  const updateFolder = async (folderId: string, folderData: Partial<Folder>) => {
+    if (!user) throw new Error('User not authenticated');
+
     try {
-      await folderService.updateFolder(folderId, updates);
-      const existingFolder = folders.find(folder => folder.folderId === folderId);
-      if (!existingFolder) {
-        throw new Error('Folder not found');
+      await folderService.updateFolder(folderId, folderData);
+      // Fetch the updated folder to get the latest data
+      const updatedFolder = await folderService.getFolder(folderId);
+      if (updatedFolder) {
+        const serializedFolder = convertFolderTimestamps(updatedFolder);
+        dispatch(updateFolderAction(serializedFolder));
       }
-      const updatedFolder = { ...existingFolder, ...updates } as Folder;
-      const serializedFolder = convertFolderTimestamps(updatedFolder);
-      dispatch(updateFolderAction(serializedFolder));
     } catch (err) {
       dispatch(setError(err instanceof Error ? err.message : 'Failed to update folder'));
       throw err;
@@ -96,6 +90,8 @@ export const useFolders = (): FoldersState => {
   };
 
   const deleteFolder = async (folderId: string) => {
+    if (!user) throw new Error('User not authenticated');
+
     try {
       await folderService.deleteFolder(folderId);
       dispatch(deleteFolderAction(folderId));
@@ -106,35 +102,15 @@ export const useFolders = (): FoldersState => {
   };
 
   const archiveFolder = async (folderId: string) => {
-    try {
-      await folderService.archiveFolder(folderId);
-      const existingFolder = folders.find(folder => folder.folderId === folderId);
-      if (!existingFolder) throw new Error('Folder not found');
-      const updatedFolder = { ...existingFolder, isArchived: true } as Folder;
-      const serializedFolder = convertFolderTimestamps(updatedFolder);
-      dispatch(updateFolderAction(serializedFolder));
-    } catch (err) {
-      dispatch(setError(err instanceof Error ? err.message : 'Failed to archive folder'));
-      throw err;
-    }
+    await updateFolder(folderId, { isArchived: true });
   };
 
   const unarchiveFolder = async (folderId: string) => {
-    try {
-      await folderService.unarchiveFolder(folderId);
-      const existingFolder = folders.find(folder => folder.folderId === folderId);
-      if (!existingFolder) throw new Error('Folder not found');
-      const updatedFolder = { ...existingFolder, isArchived: false } as Folder;
-      const serializedFolder = convertFolderTimestamps(updatedFolder);
-      dispatch(updateFolderAction(serializedFolder));
-    } catch (err) {
-      dispatch(setError(err instanceof Error ? err.message : 'Failed to unarchive folder'));
-      throw err;
-    }
+    await updateFolder(folderId, { isArchived: false });
   };
 
-  const archivedFolders = folders.filter(folder => folder.isArchived);
   const activeFolders = folders.filter(folder => !folder.isArchived);
+  const archivedFolders = folders.filter(folder => folder.isArchived);
 
   return {
     folders,
@@ -143,10 +119,9 @@ export const useFolders = (): FoldersState => {
     createFolder,
     updateFolder,
     deleteFolder,
-    refreshFolders: fetchFolders,
     archiveFolder,
     unarchiveFolder,
-    archivedFolders,
     activeFolders,
+    archivedFolders,
   };
 };

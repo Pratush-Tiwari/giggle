@@ -1,7 +1,7 @@
 import { useCallback, useEffect } from 'react';
 import { noteService } from '../services/noteService';
 import { Note } from '../types/models';
-import { useAuth } from './useAuth';
+import { useAuth } from '../contexts/AuthContext';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import {
   setNotes,
@@ -10,8 +10,7 @@ import {
   deleteNote as deleteNoteAction,
   setLoading,
   setError,
-} from '@/store/slices/noteSlice';
-import { RootState } from '@/store';
+} from '@/store';
 import { convertNoteTimestamps, SerializableTimestamp } from '@/utils/timestampUtils';
 
 type SerializedNote = Omit<Note, 'createdAt' | 'updatedAt' | 'lastAccessedAt'> & {
@@ -25,20 +24,20 @@ interface NotesState {
   loading: boolean;
   error: string | null;
   createNote: (
-    // eslint-disable-next-line no-unused-vars
     noteData: Omit<Note, 'noteId' | 'createdAt' | 'updatedAt' | 'lastAccessedAt'>,
   ) => Promise<Note>;
-  // eslint-disable-next-line no-unused-vars
-  updateNote: (noteId: string, updates: Partial<Note>) => Promise<void>;
-  // eslint-disable-next-line no-unused-vars
+  updateNote: (noteId: string, noteData: Partial<Note>) => Promise<void>;
   deleteNote: (noteId: string) => Promise<void>;
-  refreshNotes: () => Promise<void>;
+  archiveNote: (noteId: string) => Promise<void>;
+  unarchiveNote: (noteId: string) => Promise<void>;
+  pinNote: (noteId: string) => Promise<void>;
+  unpinNote: (noteId: string) => Promise<void>;
 }
 
 export const useNotes = (folderId?: string): NotesState => {
   const dispatch = useAppDispatch();
-  const { notes, loading, error } = useAppSelector((state: RootState) => state.notes);
-  const { user } = useAuth();
+  const { notes, loading, error } = useAppSelector(state => state.app);
+  const { currentUser: user } = useAuth();
 
   const fetchNotes = useCallback(async () => {
     if (!user) return;
@@ -81,16 +80,17 @@ export const useNotes = (folderId?: string): NotesState => {
     }
   };
 
-  const updateNote = async (noteId: string, updates: Partial<Note>) => {
+  const updateNote = async (noteId: string, noteData: Partial<Note>) => {
+    if (!user) throw new Error('User not authenticated');
+
     try {
-      await noteService.updateNote(noteId, updates);
-      const existingNote = notes.find(note => note.noteId === noteId);
-      if (!existingNote) {
-        throw new Error('Note not found');
+      await noteService.updateNote(noteId, noteData);
+      // Fetch the updated note to get the latest data
+      const updatedNote = await noteService.getNote(noteId);
+      if (updatedNote) {
+        const serializedNote = convertNoteTimestamps(updatedNote);
+        dispatch(updateNoteAction(serializedNote));
       }
-      const updatedNote = { ...existingNote, ...updates } as Note;
-      const serializedNote = convertNoteTimestamps(updatedNote);
-      dispatch(updateNoteAction(serializedNote));
     } catch (err) {
       dispatch(setError(err instanceof Error ? err.message : 'Failed to update note'));
       throw err;
@@ -98,6 +98,8 @@ export const useNotes = (folderId?: string): NotesState => {
   };
 
   const deleteNote = async (noteId: string) => {
+    if (!user) throw new Error('User not authenticated');
+
     try {
       await noteService.deleteNote(noteId);
       dispatch(deleteNoteAction(noteId));
@@ -107,6 +109,22 @@ export const useNotes = (folderId?: string): NotesState => {
     }
   };
 
+  const archiveNote = async (noteId: string) => {
+    await updateNote(noteId, { isArchived: true });
+  };
+
+  const unarchiveNote = async (noteId: string) => {
+    await updateNote(noteId, { isArchived: false });
+  };
+
+  const pinNote = async (noteId: string) => {
+    await updateNote(noteId, { isPinned: true });
+  };
+
+  const unpinNote = async (noteId: string) => {
+    await updateNote(noteId, { isPinned: false });
+  };
+
   return {
     notes,
     loading,
@@ -114,6 +132,9 @@ export const useNotes = (folderId?: string): NotesState => {
     createNote,
     updateNote,
     deleteNote,
-    refreshNotes: fetchNotes,
+    archiveNote,
+    unarchiveNote,
+    pinNote,
+    unpinNote,
   };
 };

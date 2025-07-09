@@ -16,9 +16,7 @@ import { FirebaseError } from 'firebase/app';
 interface AuthContextType {
   currentUser: User | null;
   loading: boolean;
-  // eslint-disable-next-line no-unused-vars
   signup: (email: string, password: string) => Promise<void>;
-  // eslint-disable-next-line no-unused-vars
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   signInWithGoogle: () => Promise<void>;
@@ -36,24 +34,16 @@ export const useAuth = (): AuthContextType => {
 
 const getErrorMessage = (error: Error | FirebaseError): string => {
   if ('code' in error) {
-    switch (error.code) {
-      case 'auth/user-not-found':
-        return 'No account found with this email address.';
-      case 'auth/wrong-password':
-        return 'Incorrect password. Please try again.';
-      case 'auth/email-already-in-use':
-        return 'An account with this email already exists.';
-      case 'auth/weak-password':
-        return 'Password is too weak. Please choose a stronger password.';
-      case 'auth/invalid-email':
-        return 'Please enter a valid email address.';
-      case 'auth/too-many-requests':
-        return 'Too many failed attempts. Please try again later.';
-      case 'auth/network-request-failed':
-        return 'Network error. Please check your internet connection.';
-      default:
-        return error.message || 'An unexpected error occurred.';
-    }
+    const errorMessages: Record<string, string> = {
+      'auth/user-not-found': 'No account found with this email address.',
+      'auth/wrong-password': 'Incorrect password. Please try again.',
+      'auth/email-already-in-use': 'An account with this email already exists.',
+      'auth/weak-password': 'Password is too weak. Please choose a stronger password.',
+      'auth/invalid-email': 'Please enter a valid email address.',
+      'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
+      'auth/network-request-failed': 'Network error. Please check your internet connection.',
+    };
+    return errorMessages[error.code] || error.message || 'An unexpected error occurred.';
   }
   return error?.message || 'An unexpected error occurred.';
 };
@@ -144,6 +134,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }): JSX.E
       const result = await signInWithPopup(auth, provider);
       // @ts-ignore - additionalUserInfo exists on the result but TypeScript types are incorrect
       const isNewUser = result.additionalUserInfo?.isNewUser ?? false;
+
       if (isNewUser) {
         await folderService.createDefaultFolders(result.user.uid);
         toast({
